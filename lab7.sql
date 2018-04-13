@@ -1,11 +1,10 @@
-﻿CREATE TABLE magazin (
+﻿--create two tables
+
+CREATE TABLE magazin (
   id        INT UNIQUE,
   product VARCHAR(50),
   cena VARCHAR(10)
 );
-
-INSERT INTO magazin (id, product,cena) VALUES (1, 'Чай', 15.45);
-DROP TABLE journal_history;
 
 CREATE TABLE journal_history (
   id           SERIAL,
@@ -17,6 +16,7 @@ CREATE TABLE journal_history (
   deleted      BOOLEAN
 );
 
+--create function for insert changes to journal changes
 
 CREATE OR REPLACE FUNCTION func_tr()
   RETURNS TRIGGER AS
@@ -47,10 +47,10 @@ CREATE TRIGGER tr_ins
   FOR EACH ROW
 EXECUTE PROCEDURE func_tr();
 
-DROP FUNCTION func_tr() CASCADE;
+-----------------------rollback triggers------------------------
 
-DELETE FROM journal_history;
--------------------------------------------------------------------------------------------------------
+
+--time rollback
 
 CREATE OR REPLACE FUNCTION func_back_time(b_time TIMESTAMP WITHOUT TIME ZONE)
   RETURNS INTEGER AS
@@ -93,6 +93,8 @@ BEGIN
 END;
 $$
 LANGUAGE plpgsql;
+
+--rollback by number of operations
 
 CREATE OR REPLACE FUNCTION func_back_num(num_operation INTEGER)
   RETURNS INTEGER
@@ -140,17 +142,7 @@ END;
 $$
 LANGUAGE plpgsql;
 
-DELETE FROM magazin;
-DELETE FROM journal_history;
-SELECT *
-FROM journal_history
-WHERE deleted = TRUE
-ORDER BY time_action ASC
-LIMIT 3;
-SELECT func_back_num(1);
-UPDATE journal_history
-SET deleted = TRUE
-WHERE temp_id = 1;
+--restoring first rollback by number of operations
 
 CREATE OR REPLACE FUNCTION func_return(num_operation INTEGER)
   RETURNS INTEGER
@@ -198,6 +190,7 @@ END;
 $$
 LANGUAGE plpgsql;
 
+--insert this data to check
 INSERT INTO magazin (id, product, cena) VALUES (1,'Чай',50);
 INSERT INTO magazin (id, product, cena) VALUES (2,'Кофе',100);
 INSERT INTO magazin (id, product, cena) VALUES (3,'Печенье',75);
